@@ -38,7 +38,8 @@ SHIP_ASSETS = {
     "sheep": "./assets/images/ships/sheep.png"
 }
 
-SHIP_LOCATION = [(1.0, 0.0),
+#0.1 corresponds to ~6 mm
+SHIP_LOCATION = [(1.0 - 0.1, 0.0),
  (0.766044443118978, 0.6427876096865393),
  (0.17364817766693041, 0.984807753012208),
  (-0.4999999999999998, 0.8660254037844387),
@@ -47,6 +48,8 @@ SHIP_LOCATION = [(1.0, 0.0),
  (-0.5000000000000004, -0.8660254037844384),
  (0.17364817766692997, -0.9848077530122081),
  (0.7660444431189778, -0.6427876096865396)]
+
+SHIP_ANGLES = [60, 60, 0, -45, -60, -120, 180,  180, 120]
 
 background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
 
@@ -76,8 +79,9 @@ BACKGROUND_SIZE_H = int( (5 + 5 * np.sqrt(3) / 6 )* TILE_SIZE * (1 + BKG_NUDGE_H
 BACKGROUND_SIZE_V =  int(5 * TILE_SIZE_V  * (1+BKG_NUDGE_V))   # size of Background Tiles
 
 # Ship properties
-SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2)
-SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2)
+SHIP_NUDGE = 1.2
+SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
+SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
 SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
 
 
@@ -275,9 +279,7 @@ def draw_background(draw, canvas):
     # Paste the tile image onto the canvas at the given position
     canvas.paste(tile_image, position, mask=mask)
 
-import numpy as np
-
-def hexagon_intersection(radius, alpha):
+def hexagon_intersection(radius, alpha): #{{{
     # Convert alpha to radians
     print(f'angle is: {alpha}')
     alpha = alpha +  np.pi
@@ -308,6 +310,7 @@ def hexagon_intersection(radius, alpha):
         yi = 0
     print(f'{xi}, {yi}')
     return (xi, yi)
+#}}}
 
 def calculate_position(index):
     row = 0
@@ -325,20 +328,31 @@ def calculate_ship_position(index, total_ships):
     radius = BACKGROUND_SIZE_H * SHIP_TO_BKG_RATIO // 2  # ships are positioned on a circle with this radius
     #(x,y) = hexagon_intersection(radius, angle)
     (x,y) = SHIP_LOCATION[index]
-    x = x + CANVAS_WIDTH/2
-    y = y + CANVAS_HEIGHT/2
+    x = radius*x + CANVAS_WIDTH * 0.49
+    y = radius*y + CANVAS_HEIGHT * 0.49
     print(f'{x}, {y}')
     return (round(x), round(y))  # round the values to nearest integers
 
-def draw_ship(draw, canvas, ship, position):
+def draw_ship(draw, canvas, ship, position, angle):
     # Open the ship image file
     ship_image = Image.open(SHIP_ASSETS[ship.type])
 
-    # Resize the image to fit the tile size
+    # Resize the image to fit the ship size
     ship_image = ship_image.resize((SHIP_SIZE_H, SHIP_SIZE_V), Image.LANCZOS)
 
+    # Convert the image to RGBA if it doesn't have an alpha channel
+    ship_image = ship_image.convert('RGBA')
+    
+    # Rotate the image
+    print(angle)
+    ship_image = ship_image.rotate(angle, resample=Image.BICUBIC, expand=True)
+
+    # Extract the mask from the ship image
+    mask = ship_image.split()[3]  # The alpha band is the 4th band in RGBA
+
     # Paste the ship image onto the canvas at the given position
-    canvas.paste(ship_image, position)
+    canvas.paste(ship_image, position, mask=mask)
+
 
 def draw_hexagon(draw, canvas, size_h, size_v, color="#DCC894"):
     # Calculate the points of the hexagon
@@ -361,9 +375,9 @@ def draw_game(game):
     # Create a drawing object
     draw = ImageDraw.Draw(canvas)
     
-    draw_hexagon(draw, canvas, BACKGROUND_SIZE_H*0.9, BACKGROUND_SIZE_V*0.9)
+    #draw_hexagon(draw, canvas, BACKGROUND_SIZE_H*0.9, BACKGROUND_SIZE_V*0.9)
     
-    draw_background(draw, canvas)
+    #draw_background(draw, canvas)
 
     # Draw each tile at the correct position
     for index in range(len(game.pieces)):
@@ -374,10 +388,13 @@ def draw_game(game):
     total_ships = len(game.ships)
     
     # Draw each ship at the correct position
+    """
     for index in range(total_ships):
         ship = game.ships[index]
         position = calculate_ship_position(index, total_ships)
-        draw_ship(draw, canvas, ship, position)
+        angle = SHIP_ANGLES[index] 
+        draw_ship(draw, canvas, ship, position, angle)
+    """
     
     # Save the image to a file
     canvas.save("game.png")
