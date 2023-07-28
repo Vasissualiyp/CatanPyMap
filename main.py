@@ -1,3 +1,6 @@
+# Code by Vasilii Pustovoit, 07/2023
+# Original JavaScript code by dado3212, at https://github.com/dado3212/catan
+# Library import {{{
 import random
 from typing import List
 from PIL import Image, ImageDraw
@@ -5,7 +8,9 @@ import numpy as np
 from helper import shuffle, encode64, decode64
 from random import randint
 import math
+#}}}
 
+# Arrays necessary for function of the code {{{
 TILE_ASSETS = {
     "desert": "./assets/images/desert.png",
     "brick": "./assets/images/brick.png",
@@ -51,6 +56,10 @@ SHIP_LOCATION = [(1.0 - 0.1, 0.0),
 
 SHIP_ANGLES = [60, 60, 0, -45, -60, -120, 180,  180, 120]
 
+#}}}
+
+
+# Variables definitions {{{
 background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
 
 # Final image size
@@ -83,8 +92,9 @@ SHIP_NUDGE = 1.2
 SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
 SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
 SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
+#}}}
 
-
+# Defining Classes {{{
 
 class Tile:
     def __init__(self, tile_type, number):
@@ -107,11 +117,10 @@ class Game:
         self.pieces = pieces
         self.ships = ships
         self.locs = locs if locs else []
+#}}}
 
-all_pieces = ["desert","brick","brick","brick","lumber","lumber","lumber","lumber","ore","ore","ore","sheep","sheep","sheep","sheep","wheat","wheat","wheat","wheat"]
-all_probs = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-all_ships = ["31", "31", "31", "31", "wheat", "ore", "lumber", "brick", "sheep"]
 
+# Helper functions {{{
 # Function to shuffle the elements of the list
 def shuffle(list_: List) -> List:
     random.shuffle(list_)
@@ -120,6 +129,12 @@ def shuffle(list_: List) -> List:
 # Function to pop a random element from the list
 def pop_random(list_: List) -> any:
     return list_.pop(random.randrange(len(list_)))
+#}}}
+
+# Unused moves-defining arrays {{{
+all_pieces = ["desert","brick","brick","brick","lumber","lumber","lumber","lumber","ore","ore","ore","sheep","sheep","sheep","sheep","wheat","wheat","wheat","wheat"]
+all_probs = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+all_ships = ["31", "31", "31", "31", "wheat", "ore", "lumber", "brick", "sheep"]
 
 moves = ['Red', 'Blue', 'Yellow', 'White', 'White', 'Yellow', 'Blue', 'Red']
 alt_moves = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11]
@@ -146,7 +161,9 @@ adjacent = {
   17: [13, 14, 16, 18],
   18: [14, 15, 17],
 }
+#}}}
 
+# New game types {{{
 def new_spiral_game():
     board = shuffle(all_pieces)
     probs = shuffle(all_probs)
@@ -221,9 +238,10 @@ def new_random_game():
         these_ships.append(Ship(ships[i]))
 
     return Game(pieces, these_ships)
+#}}}
 
 
-def draw_tile(draw, canvas, tile, position):
+def draw_tile(draw, canvas, tile, position): #{{{
     # Open the tile image file
     tile_image = Image.open(tile.image_path)
 
@@ -260,8 +278,9 @@ def draw_tile(draw, canvas, tile, position):
 
         # Paste the number image onto the canvas at the given position
         canvas.paste(number_image, number_position, mask=mask)
+#}}}
 
-def draw_background(draw, canvas):
+def draw_background(draw, canvas): #{{{
     # Open the tile image file
     tile_image = Image.open(background_image_path)
 
@@ -278,6 +297,7 @@ def draw_background(draw, canvas):
 
     # Paste the tile image onto the canvas at the given position
     canvas.paste(tile_image, position, mask=mask)
+#}}}
 
 def hexagon_intersection(radius, alpha): #{{{
     # Convert alpha to radians
@@ -312,7 +332,7 @@ def hexagon_intersection(radius, alpha): #{{{
     return (xi, yi)
 #}}}
 
-def calculate_position(index):
+def calculate_position(index): #{{{
     row = 0
     while index >= ROW_NUM_TILES[row]:
         index -= ROW_NUM_TILES[row]
@@ -321,10 +341,9 @@ def calculate_position(index):
     x = TILES_OFFSET_H + (TILE_SIZE + TILE_SPACING) * column - abs(row-2)*TILE_SIZE / 2
     y = TILES_OFFSET_V + (TILE_SIZE - TILE_VSPACING) * row
     return (round(x), round(y))
+#}}}
 
-
-
-def calculate_ship_position(index, total_ships):
+def calculate_ship_position(index, total_ships): #{{{
     radius = BACKGROUND_SIZE_H * SHIP_TO_BKG_RATIO // 2  # ships are positioned on a circle with this radius
     #(x,y) = hexagon_intersection(radius, angle)
     (x,y) = SHIP_LOCATION[index]
@@ -332,8 +351,9 @@ def calculate_ship_position(index, total_ships):
     y = radius*y + CANVAS_HEIGHT * 0.49
     print(f'{x}, {y}')
     return (round(x), round(y))  # round the values to nearest integers
+#}}}
 
-def draw_ship(draw, canvas, ship, position, angle):
+def draw_ship(draw, canvas, ship, position, angle): #{{{
     # Open the ship image file
     ship_image = Image.open(SHIP_ASSETS[ship.type])
 
@@ -352,9 +372,9 @@ def draw_ship(draw, canvas, ship, position, angle):
 
     # Paste the ship image onto the canvas at the given position
     canvas.paste(ship_image, position, mask=mask)
+#}}}
 
-
-def draw_hexagon(draw, canvas, size_h, size_v, color="#DCC894"):
+def draw_hexagon(draw, canvas, size_h, size_v, color="#DCC894"): #{{{
     # Calculate the points of the hexagon
     points = [
         (canvas.width / 2 - size_h / 2, canvas.height / 2),  # Left point
@@ -367,17 +387,33 @@ def draw_hexagon(draw, canvas, size_h, size_v, color="#DCC894"):
 
     # Draw the hexagon
     draw.polygon(points, fill=color)
+#}}}
 
-def draw_game(game):
+def draw_empty_hexagon(draw, canvas, size_h, size_v, color="#FF0000"): #{{{ #{{{
+    # Calculate the points of the hexagon
+    points = [
+        (canvas.width / 2 - size_h / 2, canvas.height / 2),  # Left point
+        (canvas.width / 2 - size_h / 4, canvas.height / 2 - size_v / 2),  # Top-left point
+        (canvas.width / 2 + size_h / 4, canvas.height / 2 - size_v / 2),  # Top-right point
+        (canvas.width / 2 + size_h / 2, canvas.height / 2),  # Right point
+        (canvas.width / 2 + size_h / 4, canvas.height / 2 + size_v / 2),  # Bottom-right point
+        (canvas.width / 2 - size_h / 4, canvas.height / 2 + size_v / 2),  # Bottom-left point
+    ]
+
+    # Draw the hexagon
+    draw.polygon(points, fill=None)
+#}}}
+
+def draw_game(game): #{{{
     # Create a blank canvas
     canvas = Image.new('RGB', (CANVAS_WIDTH, CANVAS_HEIGHT), 'black')
     
     # Create a drawing object
     draw = ImageDraw.Draw(canvas)
     
-    #draw_hexagon(draw, canvas, BACKGROUND_SIZE_H*0.9, BACKGROUND_SIZE_V*0.9)
+    draw_hexagon(draw, canvas, BACKGROUND_SIZE_H*0.9, BACKGROUND_SIZE_V*0.9)
     
-    #draw_background(draw, canvas)
+    draw_background(draw, canvas)
 
     # Draw each tile at the correct position
     for index in range(len(game.pieces)):
@@ -386,6 +422,8 @@ def draw_game(game):
         draw_tile(draw, canvas, tile, position)
     
     total_ships = len(game.ships)
+
+    draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
     
     # Draw each ship at the correct position
     """
@@ -398,4 +436,5 @@ def draw_game(game):
     
     # Save the image to a file
     canvas.save("game.png")
+#}}}
 
