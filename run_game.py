@@ -3,6 +3,7 @@ from time import sleep
 from PIL import Image, ImageTk
 from screeninfo import get_monitors
 from index import main_mapgenerator
+from main import Parameters
 import threading
 import queue
 import sys
@@ -31,16 +32,18 @@ def main_tk():
     monitor = monitors[monitor_number-1]
 
     # Generate the map
-    main_mapgenerator()
+    monitor_info = (4096, 2160, 1210, 680)
+    parameters = Parameters(monitor_info)
+    main_mapgenerator(monitor_info, parameters)
     sleep(0.5)
 
     # Open the image file
     img = Image.open("game.png")
 
     # Find the 4K monitor
-    monitor = get_monitor_with_res(4096, 2160)
-    if monitor is None:
-        raise ValueError("No 4K monitor found")
+    #monitor = get_monitor_with_res(4096, 2160)
+    #if monitor is None:
+    #    raise ValueError("No 4K monitor found")
 
     # Create a Tk root widget
     root = tk.Tk()
