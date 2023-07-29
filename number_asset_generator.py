@@ -11,9 +11,13 @@ def create_image(number, save_location, bg_color="#F7D879", num_color="#000000")
     draw = ImageDraw.Draw(image)
     draw.ellipse([(0, 0), image.size], fill=bg_color)
 
+    # Below formula was derived from assumption that for number 8 the size is 12 mm, 
+    # and for 2 the size is 7 mm
+    size_variability_factor = (- 5 * abs(number - 7) + 53) / 4
+    font_size = img_size/2 * size_variability_factor / 12
     # Check if Minion Pro font is available
     try:
-        font = ImageFont.truetype("MinionPro-Medium", img_size/2) # Adjust size as needed
+        font = ImageFont.truetype("MinionPro-Medium", font_size) # Adjust size as needed
     except IOError:
         print("Minion Pro font is not available. Switching to default font.")
         font = ImageFont.load_default()

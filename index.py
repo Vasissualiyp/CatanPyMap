@@ -3,7 +3,7 @@ from main import new_random_game, new_pseudo_random_game, new_spiral_game, draw_
 
 # index.py - continued
 
-def main():
+def main_mapgenerator():
     print("Welcome to Catan Map Generator!")
     print("Select the type of game you want to generate:")
     print("1. Spiral Game")
@@ -30,5 +30,5 @@ def main():
     #img.save("catan_board.png")
 
 if __name__ == "__main__":
-    main()
+    main_mapgenerator()
 
