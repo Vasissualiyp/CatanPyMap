@@ -12,6 +12,7 @@ import math
 
 # Variables definitions {{{
 background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
+output_name = './game.png'
 
 # Final image size
 CANVAS_WIDTH = 3840
@@ -43,6 +44,8 @@ SHIP_NUDGE = 1.4
 SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
 SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
 SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
+
+NUMBER_SIZE = int( TILE_SIZE * 0.4 )
 #}}}
 
 # Arrays necessary for function of the code {{{
@@ -288,10 +291,10 @@ def draw_tile(draw, canvas, tile, position): #{{{
             number_image = number_image.convert('RGBA')
 
         # Resize the number image to be smaller than the tile size
-        number_image = number_image.resize((TILE_SIZE//2, TILE_SIZE//2), Image.LANCZOS)
+        number_image = number_image.resize((NUMBER_SIZE, NUMBER_SIZE), Image.LANCZOS)
 
         # Calculate the position of the number to be in the center of the tile
-        number_position = (position[0] + TILE_SIZE//4, position[1] + TILE_SIZE//4)
+        number_position = (position[0] + TILE_SIZE//2 - NUMBER_SIZE//2, position[1] + TILE_SIZE//2 - NUMBER_SIZE//2)
 
         # Extract the mask from the number image
         mask = number_image.split()[3]
@@ -319,39 +322,6 @@ def draw_background(draw, canvas): #{{{
     canvas.paste(tile_image, position, mask=mask)
 #}}}
 
-def hexagon_intersection(radius, alpha): #{{{
-    # Convert alpha to radians
-    print(f'angle is: {alpha}')
-    alpha = alpha +  np.pi
-    #alpha = np.deg2rad(alpha)
-    alpha = alpha % (2 * np.pi) # Make this angle between 0 and 2pi
-    slope = np.tan(alpha)
-    
-    # Set up the line equation for the side of the hexagon
-    hex_region = int(np.floor(6 * alpha / (2 * np.pi)) + 1) 
-    k_hex = (hex_region % 3 - 2) 
-    if k_hex == -2:
-        k_hex = 1
-    k_hex = k_hex * np.sqrt(3)
-    print(hex_region)
-    b_hex = radius * np.sqrt(3) * (-1)**(hex_region // 3) 
-    if hex_region in [2, 5]:
-        b_hex = b_hex / 2
-    if hex_region in [3,6]:
-        b_hex = b_hex * (-1)
-    print(f'k: {k_hex / np.sqrt(3)}, b: {b_hex / radius / np.sqrt(3)}')
-    
-    # Find intersection of the hex side with the angle
-    if abs(k_hex-slope) > 1e-5:
-        xi = b_hex / (k_hex - slope)
-        yi = slope * xi
-    else:
-        xi = radius
-        yi = 0
-    print(f'{xi}, {yi}')
-    return (xi, yi)
-#}}}
-
 def calculate_position(index): #{{{
     row = 0
     while index >= ROW_NUM_TILES[row]:
@@ -369,11 +339,10 @@ def calculate_ship_position(index, total_ships): #{{{
     (x,y) = SHIP_LOCATION[index]
     x = radius*x + CANVAS_WIDTH * 0.49
     y = radius*y + CANVAS_HEIGHT * 0.49
-    print(f'{x}, {y}')
     return (round(x), round(y))  # round the values to nearest integers
 #}}}
 
-def find_ship_pivot(ship_info, max_point_id, vertices):
+def find_ship_pivot(ship_info, max_point_id, vertices): #{{{
     side_num, point_id = ship_info
     # side_num: 0 - bottom side; 1 - right bottom side, etc.
     vertex_point = vertices[(side_num - 1) % 6 ]
@@ -382,10 +351,6 @@ def find_ship_pivot(ship_info, max_point_id, vertices):
     x2, y2 = next_vertex_point
     side_length = np.sqrt( (x1-x2)**2 + (y1-y2)**2 ) # get the length of the bkg side
     angle = np.pi / 3 * (side_num - 1) # angle of the ship (with respect to the vertical)
-    print(f'ID of the side: {side_num}')
-    print(f'Vertex point number: {vertex_point}')
-    print(f'Next vertex point number: {next_vertex_point}')
-    print(f'angle: {angle / np.pi * 180} degrees')
 
     # length of the displacement of the pivot point from the vertex along the line
     if point_id ==1:
@@ -399,42 +364,35 @@ def find_ship_pivot(ship_info, max_point_id, vertices):
     dy = - lengthwise_d * np.sin(angle)
     x_pivot = x1 + dx
     y_pivot = y1 + dy
-    print(f'({dx},{dy})')
 
     return x_pivot, y_pivot, angle
+#}}}
 
-def draw_ship_V2(draw, canvas, ship, ship_info, max_point_id, vertices):
+def draw_ship_V2(draw, canvas, ship, ship_info, max_point_id, vertices): #{{{
 
     x_pivot, y_pivot, angle = find_ship_pivot(ship_info, max_point_id, vertices)
     side_num, point_id = ship_info
-    print(f'test: {side_num}')
     if side_num in [1]:
-        print(f'checked one')
         dL = SHIP_SIZE_V * 0.7
         dx = -  dL * np.sin(angle)
         dy = - dL * np.cos(angle)
     elif side_num in [2]:
-        print(f'checked two')
         dL = SHIP_SIZE_V 
         dx = -  dL * np.sin(angle) + SHIP_SIZE_H * np.cos(angle) * 0.4 
         dy = - dL * np.cos(angle)  - SHIP_SIZE_H * np.sin(angle)  * 0.4 
     elif side_num in [3]:
-        print(f'checked three')
         dL = SHIP_SIZE_V * 0.7
         dx = -  dL * np.sin(angle)+ SHIP_SIZE_H * np.cos(angle) * 0.2 
         dy = - dL * np.cos(angle) - SHIP_SIZE_H * np.sin(angle) * 0.2 
     elif side_num in [4]:
-        print(f'checked four')
         dL = SHIP_SIZE_V * 0.6 
         dx = -  dL * np.sin(angle) + SHIP_SIZE_H * np.cos(angle) * 0.3 
         dy = - dL * np.cos(angle) - SHIP_SIZE_H * np.sin(angle)  * 0.3
     elif side_num in [5]:
-        print(f'checked five')
         dL = SHIP_SIZE_V * 0.3 
         dx = -  dL * np.sin(angle) - SHIP_SIZE_H * np.cos(angle) * 0.2 
         dy = - dL * np.cos(angle)  + SHIP_SIZE_H * np.sin(angle) * 0.2
     else:
-        print(f'checked {side_num}')
         dL = SHIP_SIZE_V / 2
         dx = -  dL * np.sin(angle)
         dy = - dL * np.cos(angle)
@@ -451,30 +409,6 @@ def draw_ship_V2(draw, canvas, ship, ship_info, max_point_id, vertices):
     
     # Rotate the image
     ship_image = ship_image.rotate(angle * 180 / np.pi, resample=Image.BICUBIC, expand=True)
-
-    print(ship.type)
-    print(position)
-
-    # Extract the mask from the ship image
-    mask = ship_image.split()[3]  # The alpha band is the 4th band in RGBA
-
-    # Paste the ship image onto the canvas at the given position
-    canvas.paste(ship_image, position, mask=mask)
-
-
-def draw_ship(draw, canvas, ship, position, angle): #{{{
-    # Open the ship image file
-    ship_image = Image.open(SHIP_ASSETS[ship.type])
-
-    # Resize the image to fit the ship size
-    ship_image = ship_image.resize((SHIP_SIZE_H, SHIP_SIZE_V), Image.LANCZOS)
-
-    # Convert the image to RGBA if it doesn't have an alpha channel
-    ship_image = ship_image.convert('RGBA')
-    
-    # Rotate the image
-    print(angle)
-    ship_image = ship_image.rotate(angle, resample=Image.BICUBIC, expand=True)
 
     # Extract the mask from the ship image
     mask = ship_image.split()[3]  # The alpha band is the 4th band in RGBA
@@ -527,7 +461,7 @@ def draw_game(game): #{{{
     
     draw_background(draw, canvas)
 
-    draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
+    #draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
 
     # Draw each tile at the correct position
     for index in range(len(game.pieces)):
@@ -545,6 +479,7 @@ def draw_game(game): #{{{
         draw_ship_V2(draw, canvas, ship, SHIP_INFO[index], 4, vertices)
     
     # Save the image to a file
-    canvas.save("game.png")
+    canvas.save(output_name)
+    print(f'The map was saved in {output_name}!')
 #}}}
 
