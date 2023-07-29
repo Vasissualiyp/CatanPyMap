@@ -15,7 +15,8 @@ background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
 output_name = './game.png'
 
 # Final image size
-CANVAS_WIDTH = 3840
+CANVAS_WIDTH = 4096
+#CANVAS_WIDTH = 3840
 CANVAS_HEIGHT = 2160
 
 # Tile properties

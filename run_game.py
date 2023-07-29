@@ -19,9 +19,20 @@ def listen_for_input(q):
         q.put(command)
 
 def main_tk():
+    # Get the list of monitors
+    monitors = get_monitors()
+
+    # Display the monitors
+    for i, m in enumerate(monitors):
+        print(f"{i+1}: {m.width}x{m.height}")
+
+    # Ask the user for the monitor they want to use
+    monitor_number = int(input("Enter the number of the monitor you want to use: "))
+    monitor = monitors[monitor_number-1]
+
     # Generate the map
     main_mapgenerator()
-    sleep(1)
+    sleep(0.5)
 
     # Open the image file
     img = Image.open("game.png")
