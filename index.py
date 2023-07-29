@@ -3,7 +3,7 @@ from main import new_random_game, new_pseudo_random_game, new_spiral_game, draw_
 
 # index.py - continued
 
-def main_mapgenerator():
+def main_mapgenerator(monitor_info):
     print("Welcome to Catan Map Generator!")
     print("Select the type of game you want to generate:")
     print("1. Spiral Game")
@@ -13,11 +13,11 @@ def main_mapgenerator():
     choice = input("Enter your choice (1-3): ")
 
     if choice == "1":
-        game = new_spiral_game()
+        game = new_spiral_game(monitor_info)
     elif choice == "2":
-        game = new_pseudo_random_game()
+        game = new_pseudo_random_game(monitor_info)
     elif choice == "3":
-        game = new_random_game()
+        game = new_random_game(monitor_info)
     else:
         print("Invalid choice. Exiting.")
         return
@@ -30,5 +30,6 @@ def main_mapgenerator():
     #img.save("catan_board.png")
 
 if __name__ == "__main__":
-    main_mapgenerator()
+    monitor_info = (4096, 2160, 1210, 680)
+    main_mapgenerator(monitor_info)
 

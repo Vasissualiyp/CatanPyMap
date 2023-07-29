@@ -14,40 +14,71 @@ import math
 background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
 output_name = './game.png'
 
-# Final image size
-CANVAS_WIDTH = 4096
-#CANVAS_WIDTH = 3840
-CANVAS_HEIGHT = 2160
+def define_vars(monitor_info):
+    # Final image size
+    CANVAS_WIDTH, CANVAS_HEIGHT = monitor_info
+    #CANVAS_WIDTH = 3840
+    #CANVAS_HEIGHT = 2160
 
-# Tile properties
-TILE_SIZE = int(40*6.4)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
-TILE_SIZE_V = int(2 / np.sqrt(3) * TILE_SIZE)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
+    # Tile properties
+    TILE_SIZE = int(40*6.4)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
+    TILE_SIZE_V = int(2 / np.sqrt(3) * TILE_SIZE)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
 
-# Tile positioning
-TILE_SPACING = 0  # space between tiles in pixels (Horizontal)
-TILE_VSPACING = int(TILE_SIZE *0.15) # space between tiles in pixels (Vertical)
-TILES_OFFSET_H = CANVAS_WIDTH/2 - 2.5 * TILE_SIZE
-TILES_OFFSET_V = CANVAS_HEIGHT/2 - int(2 * TILE_SIZE_V)
-ROW_NUM_TILES = [3, 4, 5, 4, 3]  # number of tiles in each row from top to bottom
-ROW_START_COLUMNS = [2, 1, 0, 1, 2]  # starting column number for each row
+    # Tile positioning
+    TILE_SPACING = 0  # space between tiles in pixels (Horizontal)
+    TILE_VSPACING = int(TILE_SIZE *0.15) # space between tiles in pixels (Vertical)
+    TILES_OFFSET_H = CANVAS_WIDTH/2 - 2.5 * TILE_SIZE
+    TILES_OFFSET_V = CANVAS_HEIGHT/2 - int(2 * TILE_SIZE_V)
+    ROW_NUM_TILES = [3, 4, 5, 4, 3]  # number of tiles in each row from top to bottom
+    ROW_START_COLUMNS = [2, 1, 0, 1, 2]  # starting column number for each row
 
-# Background properties
-#BACKGROUND_SIZE_H = int(265*6.4)   # size of Background Tiles
-BKG_NUDGE_H = 0.04
-BKG_NUDGE_V = 0.01
-BACKGROUND_OFFSET_H = 0
-BACKGROUND_OFFSET_V = - 5 
-BACKGROUND_SIZE_H = int( (5 + 5 * np.sqrt(3) / 6 )* TILE_SIZE * (1 + BKG_NUDGE_H))   # size of Background Tiles
-BACKGROUND_SIZE_V =  int(5 * TILE_SIZE_V  * (1+BKG_NUDGE_V))   # size of Background Tiles
+    # Background properties
+    #BACKGROUND_SIZE_H = int(265*6.4)   # size of Background Tiles
+    BKG_NUDGE_H = 0.04
+    BKG_NUDGE_V = 0.01
+    BACKGROUND_OFFSET_H = 0
+    BACKGROUND_OFFSET_V = - 5 
+    BACKGROUND_SIZE_H = int( (5 + 5 * np.sqrt(3) / 6 )* TILE_SIZE * (1 + BKG_NUDGE_H))   # size of Background Tiles
+    BACKGROUND_SIZE_V =  int(5 * TILE_SIZE_V  * (1+BKG_NUDGE_V))   # size of Background Tiles
 
-# Ship properties
-SHIP_NUDGE = 1.4
-SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
-SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
-SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
+    # Ship properties
+    SHIP_NUDGE = 1.4
+    SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
+    SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
+    SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
 
-NUMBER_SIZE = int( TILE_SIZE * 0.4 )
+    NUMBER_SIZE = int( TILE_SIZE * 0.4 )
+    #}}}
+
+class Parameters: #{{{
+    def __init__(self, monitor_res):
+        self.canvas_width, self.canvas_height, self.lineardim_x, self.lineardim_y = monitor_res
+        self.tile_size = int(40*6.4)
+        self.tile_size_v = int(2 / np.sqrt(3) * self.tile_size)
+        self.tile_spacing = 0
+        self.tile_vspacing = int(self.tile_size *0.15)
+        self.tiles_offset_h = self.canvas_width/2 - 2.5 * self.tile_size
+        self.tiles_offset_v = self.canvas_height/2 - int(2 * self.tile_size_v)
+        self.row_num_tiles = [3, 4, 5, 4, 3]
+        self.row_start_columns = [2, 1, 0, 1, 2]
+        self.bkg_nudge_h = 0.04
+        self.bkg_nudge_v = 0.01
+        self.background_offset_h = 0
+        self.background_offset_v = - 5
+        self.background_size_h = int( (5 + 5 * np.sqrt(3) / 6 )* self.tile_size * (1 + self.bkg_nudge_h))
+        self.background_size_v =  int(5 * self.tile_size_v  * (1+self.bkg_nudge_v))
+        self.ship_nudge = 1.4
+        self.ship_size_h = int(self.background_size_h * 25 / 265 / 2 * self.ship_nudge)
+        self.ship_size_v = int(self.background_size_h * 29 / 265 / 2 * self.ship_nudge)
+        self.ship_to_bkg_ratio = 40/46
+        self.number_size = int( self.tile_size * 0.4 )
+
+# Define function
+def function_with_params(a, parameters):
+    # Now you can access the variables from the parameters object
+    return a + parameters.canvas_width
 #}}}
+
 
 # Arrays necessary for function of the code {{{
 TILE_ASSETS = {
@@ -188,7 +219,7 @@ adjacent = {
 #}}}
 
 # New game types {{{
-def new_spiral_game():
+def new_spiral_game(monitor_info):
     board = shuffle(all_pieces)
     probs = shuffle(all_probs)
     ships = shuffle(all_ships)
@@ -212,7 +243,7 @@ def new_spiral_game():
 
 
 # This is the newPseudoRandomGame function
-def new_pseudo_random_game():
+def new_pseudo_random_game(monitor_info):
     board = shuffle(all_pieces.copy())
     probs = shuffle([p for p in all_probs if p not in [6, 8]])
     ships = shuffle(all_ships.copy())
@@ -245,7 +276,7 @@ def new_pseudo_random_game():
     return Game(pieces, these_ships)
 
 # This is the newRandomGame function
-def new_random_game():
+def new_random_game(monitor_info):
     board = shuffle(all_pieces.copy())
     probs = shuffle(all_probs.copy())
     ships = shuffle(all_ships.copy())
