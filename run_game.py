@@ -32,6 +32,7 @@ def main_tk():
     monitor = monitors[monitor_number-1]
 
     # Generate the map
+    #monitor_info = (monitor.width, monitor.height, 1210, 680)
     monitor_info = (4096, 2160, 1210, 680)
     parameters = Parameters(monitor_info)
     main_mapgenerator(monitor_info, parameters)

@@ -54,7 +54,7 @@ class Parameters: #{{{
     def __init__(self, monitor_res):
         self.canvas_width, self.canvas_height, self.lineardim_x, self.lineardim_y = monitor_res
         px_per_mm = (self.canvas_width/self.lineardim_x + self.canvas_height /self.lineardim_y) / 2
-        self.tile_size = int(40*2*3.2)
+        self.tile_size = int(40*2*px_per_mm)
         self.tile_size_v = int(2 / np.sqrt(3) * self.tile_size)
         self.tile_spacing = 0
         self.tile_vspacing = int(self.tile_size *0.15)
@@ -276,7 +276,7 @@ def new_random_game(monitor_info, params):
         if board[i] == "desert":
             pieces.append(Tile(board[i], 7, params))
         else:
-            pieces.append(Tile(board[i], probs.pop()))
+            pieces.append(Tile(board[i], probs.pop(), params))
 
     these_ships = []
     for i in range(len(ships)):
