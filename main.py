@@ -10,6 +10,41 @@ from random import randint
 import math
 #}}}
 
+# Variables definitions {{{
+background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
+
+# Final image size
+CANVAS_WIDTH = 3840
+CANVAS_HEIGHT = 2160
+
+# Tile properties
+TILE_SIZE = int(40*6.4)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
+TILE_SIZE_V = int(2 / np.sqrt(3) * TILE_SIZE)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
+
+# Tile positioning
+TILE_SPACING = 0  # space between tiles in pixels (Horizontal)
+TILE_VSPACING = int(TILE_SIZE *0.15) # space between tiles in pixels (Vertical)
+TILES_OFFSET_H = CANVAS_WIDTH/2 - 2.5 * TILE_SIZE
+TILES_OFFSET_V = CANVAS_HEIGHT/2 - int(2 * TILE_SIZE_V)
+ROW_NUM_TILES = [3, 4, 5, 4, 3]  # number of tiles in each row from top to bottom
+ROW_START_COLUMNS = [2, 1, 0, 1, 2]  # starting column number for each row
+
+# Background properties
+#BACKGROUND_SIZE_H = int(265*6.4)   # size of Background Tiles
+BKG_NUDGE_H = 0.04
+BKG_NUDGE_V = 0.01
+BACKGROUND_OFFSET_H = 0
+BACKGROUND_OFFSET_V = - 5 
+BACKGROUND_SIZE_H = int( (5 + 5 * np.sqrt(3) / 6 )* TILE_SIZE * (1 + BKG_NUDGE_H))   # size of Background Tiles
+BACKGROUND_SIZE_V =  int(5 * TILE_SIZE_V  * (1+BKG_NUDGE_V))   # size of Background Tiles
+
+# Ship properties
+SHIP_NUDGE = 1.4
+SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
+SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
+SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
+#}}}
+
 # Arrays necessary for function of the code {{{
 TILE_ASSETS = {
     "desert": "./assets/images/desert.png",
@@ -54,44 +89,29 @@ SHIP_LOCATION = [(1.0 - 0.1, 0.0),
  (0.17364817766692997, -0.9848077530122081),
  (0.7660444431189778, -0.6427876096865396)]
 
+SHIP_INFO = [
+(1,3),
+(2,2),
+(2,4),
+(3,3),
+(4,2),
+(4,4),
+(5,3),
+(6,2),
+(6,4),
+]
+
+vertices = [
+        (CANVAS_WIDTH / 2 - BACKGROUND_SIZE_H / 4, CANVAS_HEIGHT / 2 + BACKGROUND_SIZE_V / 2),  # Bottom-left point
+        (CANVAS_WIDTH / 2 + BACKGROUND_SIZE_H / 4, CANVAS_HEIGHT / 2 + BACKGROUND_SIZE_V / 2),  # Bottom-right point
+        (CANVAS_WIDTH / 2 + BACKGROUND_SIZE_H / 2, CANVAS_HEIGHT / 2),  # Right point
+        (CANVAS_WIDTH / 2 + BACKGROUND_SIZE_H / 4, CANVAS_HEIGHT / 2 - BACKGROUND_SIZE_V / 2),  # Top-right point
+        (CANVAS_WIDTH / 2 - BACKGROUND_SIZE_H / 4, CANVAS_HEIGHT / 2 - BACKGROUND_SIZE_V / 2),  # Top-left point
+        (CANVAS_WIDTH / 2 - BACKGROUND_SIZE_H / 2, CANVAS_HEIGHT / 2),  # Left point
+]
+
 SHIP_ANGLES = [60, 60, 0, -45, -60, -120, 180,  180, 120]
 
-#}}}
-
-
-# Variables definitions {{{
-background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
-
-# Final image size
-CANVAS_WIDTH = 3840
-CANVAS_HEIGHT = 2160
-
-# Tile properties
-TILE_SIZE = int(40*6.4)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
-TILE_SIZE_V = int(2 / np.sqrt(3) * TILE_SIZE)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
-
-# Tile positioning
-TILE_SPACING = 0  # space between tiles in pixels (Horizontal)
-TILE_VSPACING = int(TILE_SIZE *0.15) # space between tiles in pixels (Vertical)
-TILES_OFFSET_H = CANVAS_WIDTH/2 - 2.5 * TILE_SIZE
-TILES_OFFSET_V = CANVAS_HEIGHT/2 - int(2 * TILE_SIZE_V)
-ROW_NUM_TILES = [3, 4, 5, 4, 3]  # number of tiles in each row from top to bottom
-ROW_START_COLUMNS = [2, 1, 0, 1, 2]  # starting column number for each row
-
-# Background properties
-#BACKGROUND_SIZE_H = int(265*6.4)   # size of Background Tiles
-BKG_NUDGE_H = 0.04
-BKG_NUDGE_V = 0.01
-BACKGROUND_OFFSET_H = 0
-BACKGROUND_OFFSET_V = - 5 
-BACKGROUND_SIZE_H = int( (5 + 5 * np.sqrt(3) / 6 )* TILE_SIZE * (1 + BKG_NUDGE_H))   # size of Background Tiles
-BACKGROUND_SIZE_V =  int(5 * TILE_SIZE_V  * (1+BKG_NUDGE_V))   # size of Background Tiles
-
-# Ship properties
-SHIP_NUDGE = 1.2
-SHIP_SIZE_H = int(BACKGROUND_SIZE_H * 25 / 265 / 2 * SHIP_NUDGE)
-SHIP_SIZE_V = int(BACKGROUND_SIZE_H * 29 / 265 / 2 * SHIP_NUDGE)
-SHIP_TO_BKG_RATIO = 40/46 # Compared to background, how far are the ships around the center?
 #}}}
 
 # Defining Classes {{{
@@ -353,6 +373,95 @@ def calculate_ship_position(index, total_ships): #{{{
     return (round(x), round(y))  # round the values to nearest integers
 #}}}
 
+def find_ship_pivot(ship_info, max_point_id, vertices):
+    side_num, point_id = ship_info
+    # side_num: 0 - bottom side; 1 - right bottom side, etc.
+    vertex_point = vertices[(side_num - 1) % 6 ]
+    next_vertex_point = vertices[(side_num) % 6] # get the next vertex point. Reset to the starting one in case we went over the max vertex point
+    x1, y1 = vertex_point
+    x2, y2 = next_vertex_point
+    side_length = np.sqrt( (x1-x2)**2 + (y1-y2)**2 ) # get the length of the bkg side
+    angle = np.pi / 3 * (side_num - 1) # angle of the ship (with respect to the vertical)
+    print(f'ID of the side: {side_num}')
+    print(f'Vertex point number: {vertex_point}')
+    print(f'Next vertex point number: {next_vertex_point}')
+    print(f'angle: {angle / np.pi * 180} degrees')
+
+    # length of the displacement of the pivot point from the vertex along the line
+    if point_id ==1:
+        lengthwise_d = TILE_SIZE_V / np.sqrt(3) / 2
+    elif point_id == max_point_id:
+        lengthwise_d = TILE_SIZE_V * np.sqrt(3) / 2 + TILE_SIZE * (max_point_id - 2) 
+    else:
+        lengthwise_d = TILE_SIZE_V / np.sqrt(3) + TILE_SIZE * (point_id - 3 / 2) 
+    # obtain coordinates of displacement of pivot point from the vertex
+    dx = lengthwise_d * np.cos(angle)
+    dy = - lengthwise_d * np.sin(angle)
+    x_pivot = x1 + dx
+    y_pivot = y1 + dy
+    print(f'({dx},{dy})')
+
+    return x_pivot, y_pivot, angle
+
+def draw_ship_V2(draw, canvas, ship, ship_info, max_point_id, vertices):
+
+    x_pivot, y_pivot, angle = find_ship_pivot(ship_info, max_point_id, vertices)
+    side_num, point_id = ship_info
+    print(f'test: {side_num}')
+    if side_num in [1]:
+        print(f'checked one')
+        dL = SHIP_SIZE_V * 0.7
+        dx = -  dL * np.sin(angle)
+        dy = - dL * np.cos(angle)
+    elif side_num in [2]:
+        print(f'checked two')
+        dL = SHIP_SIZE_V 
+        dx = -  dL * np.sin(angle) + SHIP_SIZE_H * np.cos(angle) * 0.4 
+        dy = - dL * np.cos(angle)  - SHIP_SIZE_H * np.sin(angle)  * 0.4 
+    elif side_num in [3]:
+        print(f'checked three')
+        dL = SHIP_SIZE_V * 0.7
+        dx = -  dL * np.sin(angle)+ SHIP_SIZE_H * np.cos(angle) * 0.2 
+        dy = - dL * np.cos(angle) - SHIP_SIZE_H * np.sin(angle) * 0.2 
+    elif side_num in [4]:
+        print(f'checked four')
+        dL = SHIP_SIZE_V * 0.6 
+        dx = -  dL * np.sin(angle) + SHIP_SIZE_H * np.cos(angle) * 0.3 
+        dy = - dL * np.cos(angle) - SHIP_SIZE_H * np.sin(angle)  * 0.3
+    elif side_num in [5]:
+        print(f'checked five')
+        dL = SHIP_SIZE_V * 0.3 
+        dx = -  dL * np.sin(angle) - SHIP_SIZE_H * np.cos(angle) * 0.2 
+        dy = - dL * np.cos(angle)  + SHIP_SIZE_H * np.sin(angle) * 0.2
+    else:
+        print(f'checked {side_num}')
+        dL = SHIP_SIZE_V / 2
+        dx = -  dL * np.sin(angle)
+        dy = - dL * np.cos(angle)
+    position = (round(x_pivot + dx - SHIP_SIZE_H/2), round(y_pivot + dy - SHIP_SIZE_V/2))
+
+    # Open the ship image file
+    ship_image = Image.open(SHIP_ASSETS[ship.type])
+
+    # Resize the image to fit the ship size
+    ship_image = ship_image.resize((SHIP_SIZE_H, SHIP_SIZE_V), Image.LANCZOS)
+
+    # Convert the image to RGBA if it doesn't have an alpha channel
+    ship_image = ship_image.convert('RGBA')
+    
+    # Rotate the image
+    ship_image = ship_image.rotate(angle * 180 / np.pi, resample=Image.BICUBIC, expand=True)
+
+    print(ship.type)
+    print(position)
+
+    # Extract the mask from the ship image
+    mask = ship_image.split()[3]  # The alpha band is the 4th band in RGBA
+
+    # Paste the ship image onto the canvas at the given position
+    canvas.paste(ship_image, position, mask=mask)
+
+
 def draw_ship(draw, canvas, ship, position, angle): #{{{
     # Open the ship image file
     ship_image = Image.open(SHIP_ASSETS[ship.type])
@@ -389,8 +498,9 @@ def draw_hexagon(draw, canvas, size_h, size_v, color="#DCC894"): #{{{
     draw.polygon(points, fill=color)
 #}}}
 
-def draw_empty_hexagon(draw, canvas, size_h, size_v, color="#FF0000"): #{{{ #{{{
+def draw_empty_hexagon(draw, canvas, size_h, size_v, color="#FF0000"): #{{{
     # Calculate the points of the hexagon
+    """
     points = [
         (canvas.width / 2 - size_h / 2, canvas.height / 2),  # Left point
         (canvas.width / 2 - size_h / 4, canvas.height / 2 - size_v / 2),  # Top-left point
@@ -399,6 +509,8 @@ def draw_empty_hexagon(draw, canvas, size_h, size_v, color="#FF0000"): #{{{ #{{{
         (canvas.width / 2 + size_h / 4, canvas.height / 2 + size_v / 2),  # Bottom-right point
         (canvas.width / 2 - size_h / 4, canvas.height / 2 + size_v / 2),  # Bottom-left point
     ]
+    """
+    points = vertices
 
     # Draw the hexagon
     draw.polygon(points, fill=None)
@@ -415,6 +527,8 @@ def draw_game(game): #{{{
     
     draw_background(draw, canvas)
 
+    draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
+
     # Draw each tile at the correct position
     for index in range(len(game.pieces)):
         tile = game.pieces[index]
@@ -423,16 +537,12 @@ def draw_game(game): #{{{
     
     total_ships = len(game.ships)
 
-    draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
+    #draw_empty_hexagon(draw, canvas, BACKGROUND_SIZE_H, BACKGROUND_SIZE_V)
     
     # Draw each ship at the correct position
-    """
     for index in range(total_ships):
         ship = game.ships[index]
-        position = calculate_ship_position(index, total_ships)
-        angle = SHIP_ANGLES[index] 
-        draw_ship(draw, canvas, ship, position, angle)
-    """
+        draw_ship_V2(draw, canvas, ship, SHIP_INFO[index], 4, vertices)
     
     # Save the image to a file
     canvas.save("game.png")
