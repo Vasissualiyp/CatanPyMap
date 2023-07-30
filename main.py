@@ -10,45 +10,8 @@ from random import randint
 import math
 #}}}
 
-# Variables definitions {{{
 background_image_path = './large_assets/extracted/tiles/sea_tiles.png'
 output_name = './game.png'
-
-def define_vars(monitor_info, params):
-    # Final image size
-    params.canvas_width, params.canvas_height = monitor_info
-    #params.canvas_width = 3840
-    #params.canvas_height = 2160
-
-    # Tile properties
-    params.tile_size = int(40*6.4)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
-    params.tile_size_v = int(2 / np.sqrt(3) * params.tile_size)  # size of each tile in pixels, 2xTILE_SIDE_SIZE
-
-    # Tile positioning
-    params.tile_spacing = 0  # space between tiles in pixels (Horizontal)
-    params.tile_vspacing = int(params.tile_size *0.15) # space between tiles in pixels (Vertical)
-    params.tiles_offset_h = params.canvas_width/2 - 2.5 * params.tile_size
-    params.tiles_offset_v = params.canvas_height/2 - int(2 * params.tile_size_v)
-    params.row_num_tiles = [3, 4, 5, 4, 3]  # number of tiles in each row from top to bottom
-    params.row_start_columns = [2, 1, 0, 1, 2]  # starting column number for each row
-
-    # Background properties
-    #params.background_size_h = int(265*6.4)   # size of Background Tiles
-    params.bkg_nudge_h = 0.04
-    params.bkg_nudge_v = 0.01
-    params.background_offset_h = 0
-    params.background_offset_v = - 5 
-    params.background_size_h = int( (5 + 5 * np.sqrt(3) / 6 )* params.tile_size * (1 + params.bkg_nudge_h))   # size of Background Tiles
-    params.background_size_v =  int(5 * params.tile_size_v  * (1+params.bkg_nudge_v))   # size of Background Tiles
-
-    # Ship properties
-    params.ship_nudge = 1.4
-    params.ship_size_h = int(params.background_size_h * 25 / 265 / 2 * params.ship_nudge)
-    params.ship_size_v = int(params.background_size_h * 29 / 265 / 2 * params.ship_nudge)
-    params.ship_to_bkg_ratio = 40/46 # Compared to background, how far are the ships around the center?
-
-    params.number_size = int( params.tile_size * 0.4 )
-    #}}}
 
 class Parameters: #{{{
     def __init__(self, monitor_res):
@@ -140,7 +103,6 @@ class Parameters: #{{{
 #}}}
 
 # Defining Classes {{{
-
 class Tile:
     def __init__(self, tile_type, number, params):
         self.tile_type = tile_type
@@ -390,7 +352,7 @@ def find_ship_pivot(ship_info, max_point_id, params): #{{{
     return x_pivot, y_pivot, angle
 #}}}
 
-def draw_ship_V2(draw, canvas, ship, ship_info, max_point_id, params): #{{{
+def draw_ship(draw, canvas, ship, ship_info, max_point_id, params): #{{{
 
     x_pivot, y_pivot, angle = find_ship_pivot(ship_info, max_point_id, params)
     side_num, point_id = ship_info
@@ -498,7 +460,7 @@ def draw_game(game, params): #{{{
     # Draw each ship at the correct position
     for index in range(total_ships):
         ship = game.ships[index]
-        draw_ship_V2(draw, canvas, ship, params.ship_info[index], 4, params)
+        draw_ship(draw, canvas, ship, params.ship_info[index], 4, params)
     
     # Save the image to a file
     canvas.save(output_name)
