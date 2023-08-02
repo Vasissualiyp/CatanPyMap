@@ -32,7 +32,7 @@ This script does the following:
 Before running the game, ensure that the necessary Python libraries are installed by running:
 
 ```
-pip install tkinter PIL screeninfo
+pip install -r requirements.txt
 ```
 
 After running the `run_game.py` script, you should see a list of your available monitors. Enter the number of the monitor you want to use for displaying the game. The game map will then be generated and displayed on that monitor.
