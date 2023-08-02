@@ -12,14 +12,32 @@ The project is structured into several Python files, each serving a different pu
 3. `helper.py`: Contains several helper functions that are used across the application.
 4. `number_asset_generator.py`: Generates image assets for the numbers used in the game.
 
-### How to Run
+## How to Run
 
-To run the application, execute the `main.py` script:
+To run the application, you should execute the `run_game.py` script:
 
 ```
-python3 main.py
+python3 run_game.py
 ```
 
+This script does the following:
+
+1. Lists all available monitors and prompts the user to select one for displaying the game.
+2. Generates a Catan game map based on the selected monitor's resolution.
+3. Opens the generated map image and prepares it for display.
+4. Creates a new Tkinter window, sets it to fullscreen on the selected monitor, and displays the map image on it.
+5. Starts a new thread to listen for user input from the console.
+6. Periodically checks the input queue for commands. If it receives a "quit" or "exit" command, it closes the Tkinter window and ends the program. If it receives a "reload" command, it restarts the Tkinter window and regenerates the game map.
+
+Before running the game, ensure that the necessary Python libraries are installed by running:
+
+```
+pip install tkinter PIL screeninfo
+```
+
+After running the `run_game.py` script, you should see a list of your available monitors. Enter the number of the monitor you want to use for displaying the game. The game map will then be generated and displayed on that monitor.
+
+You can enter commands in the console to control the game. Enter "quit" or "exit" to close the game, or "reload" to regenerate the game map.
 ### Configuration
 
 The `Params` class in `index.py` contains several parameters that you can adjust to fit your setup. Here is a brief description of each parameter:
