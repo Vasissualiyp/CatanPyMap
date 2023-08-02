@@ -1,5 +1,5 @@
-from main import new_random_game, new_pseudo_random_game, new_spiral_game, draw_game
-from main import Parameters 
+from src.main import new_random_game, new_pseudo_random_game, new_spiral_game, draw_game
+from src.main import Parameters 
 
 # index.py - continued
 

@@ -5,7 +5,7 @@ import random
 from typing import List
 from PIL import Image, ImageDraw
 import numpy as np
-from helper import shuffle, encode64, decode64
+from src.helper import shuffle, encode64, decode64
 from random import randint
 import math
 #}}}
@@ -445,8 +445,6 @@ def draw_game(game, params): #{{{
     
     draw_background(draw, canvas, params)
 
-    #draw_empty_hexagon(draw, canvas, params.background_size_h, params.background_size_v)
-
     # Draw each tile at the correct position
     for index in range(len(game.pieces)):
         tile = game.pieces[index]
@@ -455,8 +453,6 @@ def draw_game(game, params): #{{{
     
     total_ships = len(game.ships)
 
-    #draw_empty_hexagon(draw, canvas, params.background_size_h, params.background_size_v, params)
-    
     # Draw each ship at the correct position
     for index in range(total_ships):
         ship = game.ships[index]

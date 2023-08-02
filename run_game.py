@@ -2,8 +2,8 @@ import tkinter as tk
 from time import sleep
 from PIL import Image, ImageTk
 from screeninfo import get_monitors
-from index import main_mapgenerator
-from main import Parameters
+from src.index import main_mapgenerator
+from src.main import Parameters
 import threading
 import queue
 import sys
