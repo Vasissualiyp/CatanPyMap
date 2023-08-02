@@ -1,0 +1,7 @@
+tkinter
+PIL
+screeninfo
+queue
+threading
+time
+sys
